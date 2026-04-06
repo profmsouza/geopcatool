@@ -1,5 +1,5 @@
 import React from 'react';
-import { GraduationCap, Map, BarChart3, BookOpen, Phone, Instagram, Linkedin, FileText, Newspaper, ArrowRight, HeartPulse } from 'lucide-react';
+import { GraduationCap, Map, BarChart3, BookOpen, Phone, Instagram, Linkedin, FileText, Newspaper, ArrowRight, HeartPulse, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function Home() {
