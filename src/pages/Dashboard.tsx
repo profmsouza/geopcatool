@@ -687,16 +687,25 @@ export function Dashboard() {
                     (filterCity === 'all' || u.city === filterCity) &&
                     (filterNeighborhood === 'all' || u.neighborhood === filterNeighborhood) &&
                     (filterHealthUnit === 'all' || u.name === filterHealthUnit)
-                  ).map(unit => (
-                    <Marker 
-                      key={unit.id} 
-                      position={[unit.lat, unit.lng]}
-                    >
-                      <LeafletTooltip direction="top" offset={[0, -20]} opacity={1}>
-                        <span className="font-bold text-slate-900">{unit.name}</span>
-                      </LeafletTooltip>
-                    </Marker>
-                  ))}
+                  ).map(unit => {
+                    const customIcon = new L.Icon({
+                      iconUrl: 'https://i.imgur.com/rjK5kkh.png',
+                      iconSize: [32, 32],
+                      iconAnchor: [16, 32],
+                      popupAnchor: [0, -32],
+                    });
+                    return (
+                      <Marker 
+                        key={unit.id} 
+                        position={[unit.lat, unit.lng]}
+                        icon={customIcon}
+                      >
+                        <LeafletTooltip direction="top" offset={[0, -20]} opacity={1}>
+                          <span className="font-bold text-slate-900">{unit.name}</span>
+                        </LeafletTooltip>
+                      </Marker>
+                    );
+                  })}
                 </MapContainer>
               </div>
               <div className="flex justify-center gap-4 mt-4 flex-wrap">
@@ -713,7 +722,7 @@ export function Dashboard() {
                   <span className="text-xs text-slate-600 font-medium">Vulnerável (&lt; 4.0)</span>
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 border-l border-slate-200 pl-4">
-                  <img src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png" alt="UBS" className="h-4" />
+                  <img src="https://i.imgur.com/rjK5kkh.png" alt="UBS" className="h-5" />
                   <span className="text-xs text-slate-600 font-medium">Unidade de Saúde</span>
                 </div>
               </div>

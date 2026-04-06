@@ -44,7 +44,7 @@ export function Login() {
   return (
     <div className="flex flex-col min-h-screen p-6 bg-slate-50">
       <header className="flex items-center gap-3 mb-10">
-        <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600">
+        <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
           <Globe size={28} />
         </div>
         <div className="flex flex-col">
@@ -55,11 +55,15 @@ export function Login() {
 
       <div className="flex-1 flex flex-col items-center justify-center w-full">
         <div className="w-full mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-700 to-emerald-500 mb-6 shadow-xl">
-            <GraduationCap size={40} className="text-white" />
+          <div className="inline-flex items-center justify-center w-56 h-56 mb-6">
+            <img 
+              src="https://i.imgur.com/y39rBw7.png" 
+              alt="GeoPCATool Logo" 
+              className="w-full h-full object-contain drop-shadow-xl" 
+            />
           </div>
           <h2 className="text-3xl font-bold mb-2 text-slate-900">
-            {isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}
+            {isLogin ? 'Bem-vindo(a) de volta' : 'Crie sua conta'}
           </h2>
           <p className="text-slate-600">
             {isLogin ? 'Avaliação Acadêmica e Profissional Segura' : 'Cadastre-se para gerenciar avaliações'}
