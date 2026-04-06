@@ -734,7 +734,7 @@ export function Dashboard() {
               <h2 className="text-lg font-bold text-slate-900 mb-4">Evolução dos Escores ao Longo do Tempo</h2>
               <div className="h-[320px] w-full">
                 {evolutionData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <LineChart data={evolutionData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="year" stroke="#94a3b8" fontSize={12} />
@@ -762,7 +762,7 @@ export function Dashboard() {
               <h2 className="text-lg font-bold text-slate-900 mb-4">Escore Médio por Bairro (Top 5)</h2>
               <div className="h-[320px] w-full">
                 {neighborhoodData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <BarChart data={neighborhoodData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
                       <XAxis type="number" domain={[0, 10]} stroke="#94a3b8" fontSize={12} />
@@ -791,7 +791,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Comparativo de Atributos (Radar)</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                     <PolarGrid stroke="#e2e8f0" />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
@@ -810,7 +810,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Proporção de Qualidade por Bairro</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={stackedBarData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tick={{ angle: -45, textAnchor: 'end' }} height={60} />
@@ -829,7 +829,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Gap de Percepção (Profissional vs Cidadão)</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={divergentBarData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
                     <XAxis type="number" domain={[0, 10]} stroke="#94a3b8" fontSize={12} />
@@ -847,7 +847,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Correlação: Escore PCATool vs Taxa ICSAP</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis type="number" dataKey="score" name="Escore PCATool" domain={[0, 10]} stroke="#94a3b8" fontSize={12} label={{ value: 'Escore PCATool', position: 'insideBottom', offset: -10, fontSize: 12, fill: '#64748b' }} />
@@ -868,7 +868,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:col-span-2">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Integralidade: Serviços Disponíveis (G) vs Prestados (H)</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={groupedBarData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tick={{ angle: -45, textAnchor: 'end' }} height={60} />

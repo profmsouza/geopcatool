@@ -14,7 +14,7 @@ export function Home() {
         <div className="relative z-10 max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-md border border-white/10 shadow-lg">
-              <GraduationCap size={32} className="text-white" />
+              <Globe size={32} className="text-white" />
             </div>
             <div>
               <h1 className="text-3xl font-extrabold leading-tight tracking-tight">GeoPCATool</h1>

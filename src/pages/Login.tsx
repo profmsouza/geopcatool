@@ -49,7 +49,7 @@ export function Login() {
         </div>
         <div className="flex flex-col">
           <h1 className="text-xl font-bold leading-tight tracking-tight text-blue-800">GeoPCATool</h1>
-          <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Avaliação da Atenção Primária</p>
+          <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Inteligência em Saúde Pública</p>
         </div>
       </header>
 
