@@ -40,6 +40,13 @@ interface SurveyResponse {
   created_at: string;
 }
 
+const customIcon = new L.Icon({
+  iconUrl: 'https://i.imgur.com/WZXGlks.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+
 export function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -688,12 +695,6 @@ export function Dashboard() {
                     (filterNeighborhood === 'all' || u.neighborhood === filterNeighborhood) &&
                     (filterHealthUnit === 'all' || u.name === filterHealthUnit)
                   ).map(unit => {
-                    const customIcon = new L.Icon({
-                      iconUrl: 'https://i.imgur.com/rjK5kkh.png',
-                      iconSize: [32, 32],
-                      iconAnchor: [16, 32],
-                      popupAnchor: [0, -32],
-                    });
                     return (
                       <Marker 
                         key={unit.id} 
@@ -722,7 +723,7 @@ export function Dashboard() {
                   <span className="text-xs text-slate-600 font-medium">Vulnerável (&lt; 4.0)</span>
                 </div>
                 <div className="flex items-center gap-1.5 ml-2 border-l border-slate-200 pl-4">
-                  <img src="https://i.imgur.com/rjK5kkh.png" alt="UBS" className="h-5" />
+                  <img src="https://i.imgur.com/WZXGlks.png" alt="UBS" className="h-5" />
                   <span className="text-xs text-slate-600 font-medium">Unidade de Saúde</span>
                 </div>
               </div>
@@ -744,8 +745,8 @@ export function Dashboard() {
                         labelFormatter={(label) => `Ano: ${label}`}
                       />
                       <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line type="monotone" dataKey="Escore" name="Escore Médio" stroke="#1e40af" strokeWidth={3} activeDot={{ r: 8 }} />
-                      <ReferenceLine y={6.6} stroke="#10b981" strokeDasharray="3 3" label={{ position: 'top', value: 'Adequado (6.6)', fill: '#10b981', fontSize: 10 }} />
+                      <Line type="monotone" dataKey="Escore" name="Escore Médio" stroke="#030A8C" strokeWidth={3} activeDot={{ r: 8 }} />
+                      <ReferenceLine y={6.6} stroke="#027373" strokeDasharray="3 3" label={{ position: 'top', value: 'Adequado (6.6)', fill: '#027373', fontSize: 10 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -773,7 +774,7 @@ export function Dashboard() {
                       />
                       <Bar dataKey="avgScore" radius={[0, 4, 4, 0]} barSize={24}>
                         {neighborhoodData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.avgScore >= 6.6 ? '#10b981' : entry.avgScore >= 4.0 ? '#eab308' : '#ef4444'} />
+                          <Cell key={`cell-${index}`} fill={entry.avgScore >= 6.6 ? '#027373' : entry.avgScore >= 4.0 ? '#eab308' : '#ef4444'} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -796,8 +797,8 @@ export function Dashboard() {
                     <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 10]} tick={{ fill: '#94a3b8', fontSize: 10 }} />
                     <Radar name="Referência (6.6)" dataKey="Referência" stroke="#94a3b8" fill="none" strokeDasharray="3 3" />
-                    <Radar name="Média Municipal" dataKey="Municipal" stroke="#60a5fa" fill="#60a5fa" fillOpacity={0.3} />
-                    <Radar name="Última Unidade" dataKey="Unidade" stroke="#1e40af" fill="#1e40af" fillOpacity={0.3} />
+                    <Radar name="Média Municipal" dataKey="Municipal" stroke="#7d8fdb" fill="#7d8fdb" fillOpacity={0.3} />
+                    <Radar name="Última Unidade" dataKey="Unidade" stroke="#030A8C" fill="#030A8C" fillOpacity={0.3} />
                     <Legend wrapperStyle={{ fontSize: '12px' }} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }} />
                   </RadarChart>
@@ -816,7 +817,7 @@ export function Dashboard() {
                     <YAxis stroke="#94a3b8" fontSize={12} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }} />
                     <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    <Bar dataKey="high" name="Adequado (≥ 6.6)" stackId="a" fill="#10b981" />
+                    <Bar dataKey="high" name="Adequado (≥ 6.6)" stackId="a" fill="#027373" />
                     <Bar dataKey="medium" name="Intermediário (4.0 - 6.5)" stackId="a" fill="#eab308" />
                     <Bar dataKey="low" name="Vulnerável (< 4.0)" stackId="a" fill="#ef4444" />
                   </BarChart>
@@ -835,8 +836,8 @@ export function Dashboard() {
                     <YAxis dataKey="attribute" type="category" stroke="#94a3b8" fontSize={10} width={80} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }} />
                     <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    <Bar dataKey="Profissional" fill="#1e40af" barSize={12} />
-                    <Bar dataKey="Cidadão" fill="#60a5fa" barSize={12} />
+                    <Bar dataKey="Profissional" fill="#030A8C" barSize={12} />
+                    <Bar dataKey="Cidadão" fill="#7d8fdb" barSize={12} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -855,7 +856,7 @@ export function Dashboard() {
                     <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }} />
                     <Scatter name="Bairros" data={scatterData}>
                       {scatterData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.score >= 6.6 ? '#10b981' : entry.score >= 4.0 ? '#eab308' : '#ef4444'} />
+                        <Cell key={`cell-${index}`} fill={entry.score >= 6.6 ? '#027373' : entry.score >= 4.0 ? '#eab308' : '#ef4444'} />
                       ))}
                     </Scatter>
                   </ScatterChart>
@@ -874,8 +875,8 @@ export function Dashboard() {
                     <YAxis domain={[0, 10]} stroke="#94a3b8" fontSize={12} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }} />
                     <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    <Bar dataKey="Disponível" fill="#1e40af" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Prestado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Disponível" fill="#030A8C" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Prestado" fill="#7d8fdb" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

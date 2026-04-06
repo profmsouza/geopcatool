@@ -14,18 +14,18 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const customIcon = new L.Icon({
+  iconUrl: 'https://i.imgur.com/WZXGlks.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+
 function LocationMarker({ position, setPosition }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void }) {
   useMapEvents({
     click(e) {
       setPosition(e.latlng);
     },
-  });
-
-  const customIcon = new L.Icon({
-    iconUrl: 'https://i.imgur.com/rjK5kkh.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
   });
 
   return position === null ? null : (

@@ -57,7 +57,7 @@ export function Login() {
         <div className="w-full mb-8 text-center">
           <div className="inline-flex items-center justify-center w-56 h-56 mb-6">
             <img 
-              src="https://i.imgur.com/y39rBw7.png" 
+              src="https://i.imgur.com/0p5KYy3.png" 
               alt="GeoPCATool Logo" 
               className="w-full h-full object-contain drop-shadow-xl" 
             />

@@ -3,5 +3,33 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  /* Custom Blue Palette based on Logo */
+  --color-blue-50: #f2f4fc;
+  --color-blue-100: #e0e4f8;
+  --color-blue-200: #c7cff2;
+  --color-blue-300: #a3b1e8;
+  --color-blue-400: #7d8fdb;
+  --color-blue-500: #5a6bce;
+  --color-blue-600: #023059; /* Deep Blue */
+  --color-blue-700: #022045; 
+  --color-blue-800: #030A8C; /* Bright Navy (Primary) */
+  --color-blue-900: #020659; /* Dark Navy */
+  
+  /* Custom Emerald (Teal) Palette based on Logo */
+  --color-emerald-50: #eefafa;
+  --color-emerald-100: #d4f1f1;
+  --color-emerald-200: #aee2e2;
+  --color-emerald-300: #7dcece;
+  --color-emerald-400: #52b5b5;
+  --color-emerald-500: #027373; /* Logo Teal */
+  --color-emerald-600: #025c5c; 
+  --color-emerald-700: #014545;
+  --color-emerald-800: #012e2e;
+  --color-emerald-900: #001717;
+
+  /* Custom Slate (Grays) Palette */
+  --color-slate-800: #1A1A1A;
+  --color-slate-900: #0D0D0D; /* Logo Almost Black */
 }
 
