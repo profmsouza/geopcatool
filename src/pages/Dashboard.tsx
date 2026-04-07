@@ -21,7 +21,6 @@ import { Activity, Users, MapPin, TrendingUp, Loader2, Brain, FileText, Settings
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { GoogleGenAI } from '@google/genai';
 import { HeatmapLayer } from '../components/HeatmapLayer';
 import html2pdf from 'html2pdf.js';
 
@@ -375,8 +374,6 @@ export function Dashboard() {
         return;
       }
 
-      const ai = new GoogleGenAI({ apiKey: settingsData.gemini_api_key });
-
       // Prepare data summary for AI
       const dataSummary = {
         totalEvaluations: currentStats.totalEvaluations,
@@ -424,13 +421,29 @@ export function Dashboard() {
         Formate a resposta em HTML válido (apenas as tags internas, sem <html> ou <body>), usando tags como <h3>, <p>, <ul>, <li>, <strong>. Não use Markdown.
       `;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
-        contents: prompt,
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${settingsData.gemini_api_key}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: 'Você é um especialista em saúde pública e análise de dados do PCATool.' },
+            { role: 'user', content: prompt }
+          ]
+        })
       });
 
-      let htmlText = response.text || '';
-      // Remove markdown code blocks if Gemini returns them
+      if (!response.ok) {
+        throw new Error(`DeepSeek API Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      let htmlText = data.choices[0].message.content || '';
+      
+      // Remove markdown code blocks if DeepSeek returns them
       htmlText = htmlText.replace(/^```html\s*/i, '').replace(/```\s*$/i, '');
 
       setAiReport(htmlText);

@@ -74,7 +74,7 @@ export function Settings() {
               <Key size={24} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Inteligência Artificial (Gemini)</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Inteligência Artificial (DeepSeek)</h2>
               <p className="text-sm text-slate-500">Configure sua chave de API para habilitar análises automáticas no Dashboard.</p>
             </div>
           </div>
@@ -92,14 +92,24 @@ export function Settings() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Google Gemini API Key
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">
+                DeepSeek API Key
+              </label>
+              <a 
+                href="https://platform.deepseek.com/api_keys" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-blue-700 hover:text-blue-800 hover:underline flex items-center gap-1"
+              >
+                Gerar chave na DeepSeek
+              </a>
+            </div>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="AIzaSy..."
+              placeholder="sk-..."
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-700 focus:border-transparent outline-none transition-all font-mono text-sm"
             />
             <p className="mt-2 text-xs text-slate-500">
