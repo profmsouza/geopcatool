@@ -27,7 +27,7 @@ export function Settings() {
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading settings:', error);
       } else if (data && data.gemini_api_key) {
-        setApiKey(data.gemini_api_key);
+        setApiKey('********'); // Show placeholder for encrypted key
       }
     } catch (err) {
       console.error(err);
@@ -38,19 +38,31 @@ export function Settings() {
     e.preventDefault();
     if (!user) return;
 
+    // Don't save if the user hasn't changed the placeholder
+    if (apiKey === '********') {
+      setStatus({ type: 'success', message: 'Configurações salvas com sucesso!' });
+      return;
+    }
+
     setLoading(true);
     setStatus(null);
 
     try {
-      const { error } = await supabase
-        .from('user_settings')
-        .upsert({ 
-          id: user.id, 
-          gemini_api_key: apiKey,
-          updated_at: new Date().toISOString()
-        });
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch('/api/settings/api-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ apiKey })
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao salvar configurações.');
+      }
       
       setStatus({ type: 'success', message: 'Configurações salvas com sucesso!' });
     } catch (err: any) {

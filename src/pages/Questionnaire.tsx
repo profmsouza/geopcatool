@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Info, MapPin, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Info, MapPin, CheckCircle2, ChevronLeft, ChevronRight, WifiOff } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { calculatePCAToolScore } from '../lib/calculator';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useOfflineSync } from '../hooks/useOfflineSync';
 import { 
   QUESTIONS_CRIANCA_EXTENSA,
   QUESTIONS_CRIANCA_REDUZIDA,
@@ -19,6 +20,7 @@ export function Questionnaire() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { isOnline, saveOfflineResponse } = useOfflineSync();
   const state = location.state as any;
   const inventory = state?.inventory;
   const targetGroup = state?.targetGroup || 'Adulto';
@@ -280,48 +282,52 @@ export function Questionnaire() {
         score_orientacao_comunitaria = components['J'] || null;
       }
 
-      await supabase.from('survey_responses').insert([
-        {
-          user_id: user?.id,
-          registration_number: inventory?.registrationNumber,
-          birth_date: inventory?.birthDate,
-          age: inventory?.age ? parseInt(inventory.age) : null,
-          education_level: inventory?.educationLevel,
-          monthly_income: inventory?.monthlyIncome,
-          cep: inventory?.cep,
-          street: inventory?.street,
-          neighborhood: inventory?.neighborhood,
-          city: inventory?.city,
-          state: inventory?.state,
-          distance_to_ubs: inventory?.distanceToUbs,
-          transport_mode: inventory?.transportMode,
-          service_type: serviceType,
-          target_group: targetGroup,
-          version: version,
-          answers: finalAnswers,
-          question_codes: QUESTIONS.map(q => q.code),
-          score,
-          is_high_quality: isHighQuality,
-          components,
-          latitude: finalLat,
-          longitude: finalLng,
-          score_afiliacao,
-          score_acesso_utilizacao,
-          score_acesso_acessibilidade,
-          score_longitudinalidade,
-          score_coordenacao_cuidados,
-          score_coordenacao_sistemas,
-          score_integralidade_disponiveis,
-          score_integralidade_prestados,
-          score_orientacao_familiar,
-          score_orientacao_comunitaria
-        }
-      ]);
+      const responseData = {
+        user_id: user?.id,
+        registration_number: inventory?.registrationNumber,
+        birth_date: inventory?.birthDate,
+        age: inventory?.age ? parseInt(inventory.age) : null,
+        education_level: inventory?.educationLevel,
+        monthly_income: inventory?.monthlyIncome,
+        cep: inventory?.cep,
+        street: inventory?.street,
+        neighborhood: inventory?.neighborhood,
+        city: inventory?.city,
+        state: inventory?.state,
+        distance_to_ubs: inventory?.distanceToUbs,
+        transport_mode: inventory?.transportMode,
+        service_type: serviceType,
+        target_group: targetGroup,
+        version: version,
+        answers: finalAnswers,
+        question_codes: QUESTIONS.map(q => q.code),
+        score,
+        is_high_quality: isHighQuality,
+        components,
+        latitude: finalLat,
+        longitude: finalLng,
+        score_afiliacao,
+        score_acesso_utilizacao,
+        score_acesso_acessibilidade,
+        score_longitudinalidade,
+        score_coordenacao_cuidados,
+        score_coordenacao_sistemas,
+        score_integralidade_disponiveis,
+        score_integralidade_prestados,
+        score_orientacao_familiar,
+        score_orientacao_comunitaria
+      };
+
+      if (isOnline) {
+        await supabase.from('survey_responses').insert([responseData]);
+      } else {
+        saveOfflineResponse(responseData);
+      }
     } catch (e) {
-      console.error("Failed to save to Supabase", e);
+      console.error("Failed to save response", e);
     }
 
-    navigate('/dashboard', { state: { score, isHighQuality, components } });
+    navigate('/dashboard', { state: { score, isHighQuality, components, showFeedbackLoop: true } });
   };
 
   const q = QUESTIONS[currentQ];
@@ -341,6 +347,11 @@ export function Questionnaire() {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 {gpsLocation ? `GPS: ${gpsLocation.lat.toFixed(2)}, ${gpsLocation.lng.toFixed(2)}` : 'Buscando GPS...'}
               </span>
+              {!isOnline && (
+                <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-amber-600 ml-2">
+                  <WifiOff size={12} /> Offline
+                </span>
+              )}
             </div>
           </div>
           <button className="text-blue-800 flex w-10 h-10 items-center justify-center rounded-full hover:bg-blue-50 transition-colors">

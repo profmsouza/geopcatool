@@ -23,6 +23,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 import { HeatmapLayer } from '../components/HeatmapLayer';
 import html2pdf from 'html2pdf.js';
+import { exportToEsusCSV } from '../utils/exportEsus';
+import { useOfflineSync } from '../hooks/useOfflineSync';
+import { WifiOff, RefreshCw } from 'lucide-react';
 
 interface SurveyResponse {
   id: string;
@@ -66,6 +69,8 @@ export function Dashboard() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [apiKeyError, setApiKeyError] = useState(false);
+
+  const { pendingSyncCount, isOnline, syncOfflineData } = useOfflineSync();
 
   useEffect(() => {
     async function fetchData() {
@@ -159,6 +164,15 @@ export function Dashboard() {
     totalEvaluations: 0,
     criticalAreas: 0
   };
+
+  const regionalAverage = useMemo(() => {
+    let regionalResponses = responses;
+    if (filterCity !== 'all') {
+      regionalResponses = responses.filter(r => r.city === filterCity);
+    }
+    if (regionalResponses.length === 0) return 0;
+    return regionalResponses.reduce((acc, curr) => acc + (Number(curr.score) || 0), 0) / regionalResponses.length;
+  }, [responses, filterCity]);
 
   const displayScore = state?.score ?? currentStats.avgScore;
   const displayIsHighQuality = state?.isHighQuality ?? (displayScore >= 6.6);
@@ -361,19 +375,6 @@ export function Dashboard() {
     setAiReport(null);
 
     try {
-      // Fetch API Key
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('user_settings')
-        .select('gemini_api_key')
-        .eq('id', user.id)
-        .single();
-
-      if (settingsError || !settingsData?.gemini_api_key) {
-        setApiKeyError(true);
-        setAiLoading(false);
-        return;
-      }
-
       // Prepare data summary for AI
       const dataSummary = {
         totalEvaluations: currentStats.totalEvaluations,
@@ -421,32 +422,29 @@ export function Dashboard() {
         Formate a resposta em HTML válido (apenas as tags internas, sem <html> ou <body>), usando tags como <h3>, <p>, <ul>, <li>, <strong>. Não use Markdown.
       `;
 
-      const response = await fetch('https://api.deepseek.com/chat/completions', {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settingsData.gemini_api_key}`
+          'Authorization': `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [
-            { role: 'system', content: 'Você é um especialista em saúde pública e análise de dados do PCATool.' },
-            { role: 'user', content: prompt }
-          ]
-        })
+        body: JSON.stringify({ prompt })
       });
 
       if (!response.ok) {
-        throw new Error(`DeepSeek API Error: ${response.statusText}`);
+        const errorData = await response.json();
+        if (response.status === 400 && errorData.error === 'API key not configured') {
+          setApiKeyError(true);
+          setAiLoading(false);
+          return;
+        }
+        throw new Error(errorData.error || `Server Error: ${response.statusText}`);
       }
 
       const data = await response.json();
-      let htmlText = data.choices[0].message.content || '';
-      
-      // Remove markdown code blocks if DeepSeek returns them
-      htmlText = htmlText.replace(/^```html\s*/i, '').replace(/```\s*$/i, '');
-
-      setAiReport(htmlText);
+      setAiReport(data.report);
     } catch (error) {
       console.error("Error generating AI report:", error);
       setAiReport("Ocorreu um erro ao gerar o relatório. Verifique sua chave de API e tente novamente.");
@@ -502,6 +500,22 @@ export function Dashboard() {
             <p className="text-blue-200 text-sm">Visão Geral do Território</p>
           </div>
           <div className="flex items-center gap-2">
+            {!isOnline && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/20 border border-amber-500/30 rounded-lg text-amber-100 text-xs font-medium">
+                <WifiOff size={14} />
+                Offline
+              </div>
+            )}
+            {pendingSyncCount > 0 && (
+              <button
+                onClick={syncOfflineData}
+                disabled={!isOnline}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-100 text-xs font-medium hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw size={14} className={isOnline ? "animate-spin-slow" : ""} />
+                {pendingSyncCount} pendentes
+              </button>
+            )}
             <button
               onClick={() => navigate('/ubs/nova')}
               className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition-colors"
@@ -639,7 +653,30 @@ export function Dashboard() {
 
       <main className="flex-1 p-4 space-y-6 mt-2 max-w-7xl mx-auto w-full">
         <div id="dashboard-content" className="space-y-6">
-          {displayComponents && (
+          {state?.showFeedbackLoop && displayComponents && (
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Feedback da Avaliação</h2>
+              <p className="text-sm text-slate-500 mb-4">Resumo dos atributos da Atenção Primária para a avaliação recém-enviada.</p>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {Object.entries(displayComponents).map(([key, value]) => {
+                  const isGood = value >= 6.6;
+                  const isMedium = value >= 4.0 && value < 6.6;
+                  const colorClass = isGood ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : isMedium ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : 'bg-red-50 text-red-800 border-red-200';
+                  const dotClass = isGood ? 'bg-emerald-500' : isMedium ? 'bg-yellow-500' : 'bg-red-500';
+                  
+                  return (
+                    <div key={key} className={`p-3 rounded-xl border ${colorClass} flex flex-col items-center justify-center text-center`}>
+                      <div className={`w-3 h-3 rounded-full ${dotClass} mb-2`}></div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider mb-1">{componentLabels[key] || key}</span>
+                      <span className="text-lg font-extrabold">{value.toFixed(1)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {displayComponents && !state?.showFeedbackLoop && (
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Escores por Componente (Última Avaliação)</h2>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
@@ -747,7 +784,7 @@ export function Dashboard() {
               <h2 className="text-lg font-bold text-slate-900 mb-4">Evolução dos Escores ao Longo do Tempo</h2>
               <div className="h-[320px] w-full">
                 {evolutionData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <LineChart data={evolutionData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="year" stroke="#94a3b8" fontSize={12} />
@@ -760,6 +797,9 @@ export function Dashboard() {
                       <Legend wrapperStyle={{ fontSize: '12px' }} />
                       <Line type="monotone" dataKey="Escore" name="Escore Médio" stroke="#030A8C" strokeWidth={3} activeDot={{ r: 8 }} />
                       <ReferenceLine y={6.6} stroke="#027373" strokeDasharray="3 3" label={{ position: 'top', value: 'Adequado (6.6)', fill: '#027373', fontSize: 10 }} />
+                      {regionalAverage > 0 && (
+                        <ReferenceLine y={regionalAverage} stroke="#7d8fdb" strokeDasharray="3 3" label={{ position: 'bottom', value: `Média Regional (${regionalAverage.toFixed(2)})`, fill: '#7d8fdb', fontSize: 10 }} />
+                      )}
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -775,7 +815,7 @@ export function Dashboard() {
               <h2 className="text-lg font-bold text-slate-900 mb-4">Escore Médio por Bairro (Top 5)</h2>
               <div className="h-[320px] w-full">
                 {neighborhoodData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={neighborhoodData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
                       <XAxis type="number" domain={[0, 10]} stroke="#94a3b8" fontSize={12} />
@@ -804,7 +844,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Comparativo de Atributos (Radar)</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                     <PolarGrid stroke="#e2e8f0" />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
@@ -823,7 +863,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Proporção de Qualidade por Bairro</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={stackedBarData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tick={{ angle: -45, textAnchor: 'end' }} height={60} />
@@ -842,7 +882,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Gap de Percepção (Profissional vs Cidadão)</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={divergentBarData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
                     <XAxis type="number" domain={[0, 10]} stroke="#94a3b8" fontSize={12} />
@@ -860,7 +900,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Correlação: Escore PCATool vs Taxa ICSAP</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis type="number" dataKey="score" name="Escore PCATool" domain={[0, 10]} stroke="#94a3b8" fontSize={12} label={{ value: 'Escore PCATool', position: 'insideBottom', offset: -10, fontSize: 12, fill: '#64748b' }} />
@@ -881,7 +921,7 @@ export function Dashboard() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:col-span-2">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Integralidade: Serviços Disponíveis (G) vs Prestados (H)</h2>
               <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={groupedBarData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tick={{ angle: -45, textAnchor: 'end' }} height={60} />
@@ -946,13 +986,20 @@ export function Dashboard() {
           </section>
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-end pt-4 gap-4">
+          <button
+            onClick={() => exportToEsusCSV(filteredResponses)}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-colors text-sm shadow-sm"
+          >
+            <Download size={18} />
+            Exportar e-SUS (CSV)
+          </button>
           <button
             onClick={handleSaveAnalysis}
             className="flex items-center gap-2 bg-blue-800 hover:bg-blue-900 text-white px-6 py-3 rounded-xl font-medium transition-colors text-sm shadow-sm"
           >
             <Download size={18} />
-            Salvar Análises
+            Salvar Análises (PDF)
           </button>
         </div>
       </main>
